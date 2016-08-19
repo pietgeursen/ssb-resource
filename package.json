@@ -1,0 +1,21 @@
+{
+  "name": "ssb-resource",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "tape test/*.js | tap-spec"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tap-spec": "^4.1.1",
+    "tape": "^4.6.0"
+  },
+  "dependencies": {
+    "pull-pushable": "^2.0.1",
+    "pull-stream": "^3.4.3",
+    "tcomb": "^3.2.12"
+  }
+}
