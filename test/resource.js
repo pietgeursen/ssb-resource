@@ -11,7 +11,7 @@ var PersonType = t.struct({
 test('create with valid resource keys', function (t) {
   var testBot = require('./util/createTestSbot')('teste')
   var Person = Resource(PersonType, testBot)
-  Person.create({name: 'Piet'}, function (err, res) {
+  Person.create(PersonType({name: 'Piet'}), function (err, res) {
     t.error(err)
     t.equal(res.name, 'Piet')
     testBot.close()
