@@ -92,18 +92,22 @@ test('created emits when created succeds', function (t) {
   })
 })
 
-test.skip('updated emits when update succeeds', function (t) {
+test('updated emits when update succeeds', function (t) {
+  var testBot = require('./util/createTestSbot')('teste')
+  var Person = Resource(PersonType, testBot)
   pull(
     Person.updated(),
     pull.take(1),
     pull.drain(function (person) {
       t.equal(person.name, 'newName')
+      testBot.close()
       t.end()
     })
   )
-  Person.create({name: 'Piet'}, function (err, res) {
+  Person.create(PersonType({name: 'Piet'}), function (err, res) {
     t.error(err)
-    Person.update({id: res.id, name: 'newName'}, function (err, res) {
+    var updated = Person.publishedType.update(res, {name: {$set: 'newName'}})
+    Person.update(updated, function (err, res) {
       t.error(err)
     })
   })

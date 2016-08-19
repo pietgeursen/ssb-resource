@@ -21,7 +21,13 @@ function Resource (type, sbot) {
         pull.map(mapPublishedObject)
       )
     },
-    updated: function () {},
+    updated: function (opts) {
+      var _opts = Object.assign({type: editTypeString, live: true}, opts)
+      return pull(
+        sbot.messagesByType(_opts),
+        pull.map(mapPublishedObject)
+      )
+    },
     publishedType: publishedType
   }
   function publish (instance, type, typeString, cb) {
