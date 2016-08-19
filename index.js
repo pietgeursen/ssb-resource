@@ -5,7 +5,7 @@ function Resource (type) {
   var id = 0
   var created = push()
   var updated = push()
-  var publishedType = type.extend({id: t.Integer })
+  var publishedType = type.extend({id: t.Integer})
   return {
     create: function (instance, cb) {
       var obj = publishedType(Object.assign({}, instance, {id: id++}))

@@ -50,6 +50,20 @@ test('update', function (t) {
   })
 })
 
+test('multiple updates gets the most recent update', function (t) {
+  Person.create({name: 'Piet'}, function (err, res) {
+    t.error(err)
+    Person.update({id: res.id, name: 'newName'}, function (err, updated) {
+      t.error(err)
+      Person.update({id: updated.id, name: 'newest'}, function (err, newest) {
+        t.error(err)
+        t.equal(newest.id, res.id)
+        t.equal(newest.name, 'newest')
+        t.end()
+      })
+    })
+  })
+})
 // async
 test.skip('delete', function (t) {
   t.end()
