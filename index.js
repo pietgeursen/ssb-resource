@@ -1,16 +1,18 @@
 var t = require('tcomb')
-var push = require('pull-pushable')
 var pull = require('pull-stream')
 
 function Resource (type, sbot) {
-  var updated = push()
-  var publishedType = type.extend({id: t.String, author: t.String})
+  var typeString = type.meta.name
+  var editTypeString = typeString + 'Edit'
+  var deletedTypeString = typeString + 'Delete'
+
+  var publishedType = type.extend({type: t.String, id: t.String, author: t.String})
   return {
     create: function (instance, cb) {
       pull(
         pull.once(instance),
         pull.map(function (obj) {
-          obj.type = type.meta.name
+          obj.type = typeString
           return obj
         }),
         pull.map(type.extend({type: t.String})),
@@ -25,12 +27,24 @@ function Resource (type, sbot) {
       )
     },
     update: function (instance, cb) {
-      var obj = publishedType(instance)
-      cb(null, obj)
-      updated.push(obj)
+      pull(
+        pull.once(instance),
+        pull.map(publishedType),
+        pull.map(function (obj) {
+          return publishedType.update(obj, {type: {$set: editTypeString}})
+        }),
+        pull.asyncMap(function (obj, cb) {
+          sbot.publish(obj, cb)
+        }),
+        pull.map(mapPublishedObject),
+        pull.map(publishedType),
+        pull.drain(function (obj) {
+          cb(null, obj)
+        })
+      )
     },
     created: function (opts) {
-      var _opts = Object.assign({type: type.meta.name, live: true}, opts)
+      var _opts = Object.assign({type: typeString, live: true}, opts)
       return pull(
         sbot.messagesByType(_opts),
         pull.map(mapPublishedObject)

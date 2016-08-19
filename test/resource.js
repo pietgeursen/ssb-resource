@@ -20,10 +20,13 @@ test('create with valid resource keys', function (t) {
 })
 
 test('create without valid resource keys', function (t) {
+  var testBot = require('./util/createTestSbot')('teste')
+  var Person = Resource(PersonType, testBot)
   t.throws(function () {
     Person.create({}, function () {})
   })
   t.end()
+  testBot.close()
 })
 // async
 test.skip('find', function (t) {
@@ -36,13 +39,17 @@ test.skip('get', function (t) {
 })
 
 // async
-test.skip('update', function (t) {
+test('update', function (t) {
+  var testBot = require('./util/createTestSbot')('teste2')
+  var Person = Resource(PersonType, testBot)
   Person.create({name: 'Piet'}, function (err, res) {
     t.error(err)
-    Person.update({id: res.id, name: 'newName'}, function (err, updated) {
+    var updated = Person.publishedType.update(res, {name: {$set: 'newName'}})
+    Person.update(updated, function (err, updated) {
       t.error(err)
       t.equal(updated.id, res.id)
       t.equal(updated.name, 'newName')
+      testBot.close()
       t.end()
     })
   })
