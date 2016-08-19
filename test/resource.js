@@ -84,7 +84,7 @@ test('created emits when created succeds', function (t) {
   })
 })
 
-test('updated', function (t) {
+test('updated emits when update succeeds', function (t) {
   pull(
     Person.updated(),
     pull.take(1),
