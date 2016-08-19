@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "scuttlebot": "^8.4.1",
+    "ssb-keys": "^6.1.0",
     "tap-spec": "^4.1.1",
     "tape": "^4.6.0"
   },
