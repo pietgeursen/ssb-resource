@@ -25,7 +25,7 @@ function Resource (type, sbot) {
     publishedType: publishedType
   }
   function publish (instance, type, typeString, cb) {
-    return pull(
+    pull(
       pull.once(instance),
       pull.map(function (obj) {
         return type.extend({type: t.String}).update(obj, {type: {$set: typeString}})
