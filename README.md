@@ -24,6 +24,7 @@ const GatheringResource = Resource(Gathering)
 
 GatheringResource.create({
  description: "Party at mine" 
+ ...
 })
 
 pull(
