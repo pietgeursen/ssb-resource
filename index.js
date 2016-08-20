@@ -1,10 +1,11 @@
 var t = require('tcomb')
 var pull = require('pull-stream')
+var many = require('pull-many')
 
 function Resource (type, sbot) {
   var typeString = type.meta.name
   var editTypeString = typeString + 'Edit'
-  var deletedTypeString = typeString + 'Delete'
+  // var deletedTypeString = typeString + 'Delete'
 
   var publishedType = type.extend({id: t.String, author: t.String})
   return {
@@ -28,6 +29,13 @@ function Resource (type, sbot) {
         pull.map(mapPublishedObject)
       )
     },
+    latest: function (opts) {
+      return many([
+        this.updated(opts),
+        this.created(opts)
+      ])
+    },
+
     publishedType: publishedType
   }
   function publish (instance, type, typeString, cb) {
@@ -47,7 +55,7 @@ function Resource (type, sbot) {
     )
   }
   function mapPublishedObject (published) {
-    return Object.assign(
+    var obj = Object.assign(
       {},
       {
         id: published.key,
@@ -55,6 +63,8 @@ function Resource (type, sbot) {
       },
       published.value.content
     )
+    delete obj.type
+    return obj
   }
 }
 

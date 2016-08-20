@@ -1,4 +1,3 @@
-var test = require('tape')
 var t = require('tcomb')
 var pull = require('pull-stream')
 
@@ -7,112 +6,112 @@ var PersonType = t.struct({
   name: t.String
 }, 'Person')
 
-// async
-test('create with valid resource keys', function (t) {
-  var testBot = require('./util/createTestSbot')('teste')
-  var Person = Resource(PersonType, testBot)
-  Person.create(PersonType({name: 'Piet'}), function (err, res) {
-    t.error(err)
-    t.equal(res.name, 'Piet')
-    testBot.close()
-    t.end()
-  })
-})
-
-test('create without valid resource keys', function (t) {
-  var testBot = require('./util/createTestSbot')('teste')
-  var Person = Resource(PersonType, testBot)
-  t.throws(function () {
-    Person.create({}, function () {})
-  })
-  t.end()
-  testBot.close()
-})
-// async
-test.skip('find', function (t) {
-  t.end()
-})
-
-// async
-test.skip('get', function (t) {
-  t.end()
-})
-
-// async
-test('update', function (t) {
-  var testBot = require('./util/createTestSbot')('teste2')
-  var Person = Resource(PersonType, testBot)
-  Person.create({name: 'Piet'}, function (err, res) {
-    t.error(err)
-    var updated = Person.publishedType.update(res, {name: {$set: 'newName'}})
-    Person.update(updated, function (err, updated) {
-      t.error(err)
-      t.equal(updated.id, res.id)
-      t.equal(updated.name, 'newName')
+module.exports = {
+  // async
+  'create with valid resource keys': function (assert, cb) {
+    var testBot = require('./util/createTestSbot')('teste')
+    var Person = Resource(PersonType, testBot)
+    Person.create(PersonType({name: 'Piet'}), function (err, res) {
+      assert(!err)
+      assert.equal(res.name, 'Piet')
       testBot.close()
-      t.end()
+      cb()
     })
-  })
-})
+  },
 
-test.skip('multiple updates gets the most recent update', function (t) {
-  Person.create({name: 'Piet'}, function (err, res) {
-    t.error(err)
-    Person.update({id: res.id, name: 'newName'}, function (err, updated) {
-      t.error(err)
-      Person.update({id: updated.id, name: 'newest'}, function (err, newest) {
-        t.error(err)
-        t.equal(newest.id, res.id)
-        t.equal(newest.name, 'newest')
-        t.end()
+  'create without valid resource keys': function (assert) {
+    var testBot = require('./util/createTestSbot')('teste')
+    var Person = Resource(PersonType, testBot)
+    assert.throws(function () {
+      Person.create({}, function () {})
+    })
+    testBot.close()
+  },
+
+  // async
+  'update': function (assert, cb) {
+    var testBot = require('./util/createTestSbot')('teste2')
+    var Person = Resource(PersonType, testBot)
+    Person.create({name: 'Piet'}, function (err, res) {
+      assert(!err)
+      var updated = Person.publishedType.update(res, {name: {$set: 'newName'}})
+      Person.update(updated, function (err, updated) {
+        assert(!err)
+        assert.equal(updated.id, res.id)
+        assert.equal(updated.name, 'newName')
+        testBot.close()
+        cb()
       })
     })
-  })
-})
-// async
-test.skip('delete', function (t) {
-  t.end()
-})
+  },
 
-test('created emits when created succeds', function (t) {
-  var testBot = require('./util/createTestSbot')('teste1')
-  var Person = Resource(PersonType, testBot)
-  var name = 'Piet'
-  pull(
-    Person.created(),
-    pull.take(1),
-    pull.drain(function (person) {
-      t.equal(person.name, name)
-      testBot.close()
-      t.end()
+  'created emits when created succeds': function (assert, cb) {
+    var testBot = require('./util/createTestSbot')('teste1')
+    var Person = Resource(PersonType, testBot)
+    var name = 'Piet'
+    pull(
+      Person.created(),
+      pull.take(1),
+      pull.drain(function (person) {
+        assert.equal(person.name, name)
+        testBot.close()
+        cb()
+      })
+    )
+    Person.create({name: name}, function (err, res) {
+      assert(!err)
     })
-  )
-  Person.create({name: name}, function (err, res) {
-    t.error(err)
-  })
-})
+  },
 
-test('updated emits when update succeeds', function (t) {
-  var testBot = require('./util/createTestSbot')('teste')
-  var Person = Resource(PersonType, testBot)
-  pull(
-    Person.updated(),
-    pull.take(1),
-    pull.drain(function (person) {
-      t.equal(person.name, 'newName')
-      testBot.close()
-      t.end()
+  'updated emits when update succeeds': function (assert, cb) {
+    var testBot = require('./util/createTestSbot')('teste')
+    var Person = Resource(PersonType, testBot)
+    pull(
+      Person.updated(),
+      pull.take(1),
+      pull.drain(function (person) {
+        assert.equal(person.name, 'newName')
+        assert.equal(person.type, undefined)
+        testBot.close()
+        cb()
+      })
+    )
+    Person.create(PersonType({name: 'Piet'}), function (err, res) {
+      assert(!err)
+      var updated = Person.publishedType.update(res, {name: {$set: 'newName'}})
+      Person.update(updated, function (err, res) {
+        assert(!err)
+      })
     })
-  )
-  Person.create(PersonType({name: 'Piet'}), function (err, res) {
-    t.error(err)
-    var updated = Person.publishedType.update(res, {name: {$set: 'newName'}})
-    Person.update(updated, function (err, res) {
-      t.error(err)
-    })
-  })
-})
+  },
 
-test.skip('removed', function (t) {
-  t.end()
-})
+  'latest emits when created or updated': function (assert, cb) {
+    var testBot = require('./util/createTestSbot')('meh')
+    var Person = Resource(PersonType, testBot)
+    var name = 'Piet'
+    var newName = 'NewName'
+    var count = 0
+
+    pull(
+      Person.latest(),
+      pull.drain(function (person) { // why the fuck doesn't take(2), collect not work?
+        count++
+        if (count > 1) {
+          assert.equal(person.name, newName)
+          testBot.close()
+          cb()
+        } else {
+          assert.equal(person.name, name)
+        }
+      })
+    )
+
+    Person.create(PersonType({name: name}), function (err, res) {
+      assert(!err)
+      var updated = Person.publishedType.update(res, {name: {$set: newName}})
+      Person.update(updated, function (err, res) {
+        assert(!err)
+      })
+    })
+  }
+}
